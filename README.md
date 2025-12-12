@@ -2,7 +2,7 @@
 
 MoleBeat Music is a modern, desktop music player built with Electron, React, and TypeScript. It offers a sleek, dark-themed interface for managing and playing your local music library.
 
-
+<img src="public/logo.svg" alt="MoleBeat Music Logo" width="120" height="120" />
 
 ## ✨ Features
 

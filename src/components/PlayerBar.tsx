@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Volume2, Volume1, VolumeX } from 'lucide-react';
+import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Volume2, Volume1, VolumeX, MessageSquareQuote, PictureInPicture } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 
 const PlayerBar: React.FC = () => {
@@ -12,7 +12,9 @@ const PlayerBar: React.FC = () => {
         seek,
         volume,
         setVolume,
-        formatTime
+        formatTime,
+        isMiniPlayer,
+        toggleMiniPlayerMode
     } = usePlayer();
 
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +38,105 @@ const PlayerBar: React.FC = () => {
                 color: '#666'
             }}>
                 Select a track to start playing
+            </div>
+        );
+    }
+
+    if (isMiniPlayer) {
+        return (
+            <div style={{
+                height: '100vh',
+                width: '100vw',
+                position: 'relative',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end'
+            }}>
+                {/* Background Image */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: `url(${currentTrack.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    zIndex: 0
+                }} />
+
+                {/* Overlay */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    zIndex: 1
+                }} />
+
+                {/* Controls Overlay */}
+                <div style={{
+                    position: 'relative',
+                    zIndex: 2,
+                    padding: '10px',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '5px'
+                }}>
+                    {/* Top Bar with Exit Button */}
+                    <div style={{ position: 'absolute', top: '-100px', right: '10px', zIndex: 10 }}>
+                        <PictureInPicture
+                            size={20}
+                            color="#fff"
+                            style={{ cursor: 'pointer', opacity: 0.8 }}
+                            onClick={toggleMiniPlayerMode}
+                        />
+                    </div>
+
+                    <div style={{ color: '#fff', fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {currentTrack.title}
+                    </div>
+                    <div style={{ color: '#ccc', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {currentTrack.artist}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '5px' }}>
+                        <SkipBack size={20} color="#fff" style={{ cursor: 'pointer' }} />
+                        <div
+                            onClick={togglePlay}
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                backgroundColor: '#fff',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {isPlaying ?
+                                <Pause size={18} fill="#000" color="#000" /> :
+                                <Play size={18} fill="#000" color="#000" style={{ marginLeft: '2px' }} />
+                            }
+                        </div>
+                        <SkipForward size={20} color="#fff" style={{ cursor: 'pointer' }} />
+                    </div>
+
+                    {/* Restore Button (Overlay on top right) */}
+                    <div style={{ position: 'absolute', top: '-120px', right: '10px' }}>
+                        <PictureInPicture
+                            size={16}
+                            color="#fff"
+                            style={{ cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
+                            onClick={toggleMiniPlayerMode}
+                        />
+                    </div>
+                </div>
             </div>
         );
     }
@@ -143,6 +244,18 @@ const PlayerBar: React.FC = () => {
 
             {/* Volume */}
             <div style={{ display: 'flex', alignItems: 'center', width: '30%', justifyContent: 'flex-end', gap: '10px' }}>
+                <PictureInPicture
+                    size={20}
+                    color="#fff"
+                    style={{ cursor: 'pointer', marginRight: '10px' }}
+                    onClick={toggleMiniPlayerMode}
+                />
+                <MessageSquareQuote
+                    size={20}
+                    color="#fff"
+                    style={{ cursor: 'pointer', marginRight: '10px' }}
+                    onClick={() => window.location.hash = '#/lyrics'}
+                />
                 {volume === 0 ? <VolumeX size={18} color="#fff" /> : volume < 0.5 ? <Volume1 size={18} color="#fff" /> : <Volume2 size={18} color="#fff" />}
                 <div style={{ width: '100px', height: '4px', backgroundColor: '#383651', borderRadius: '2px', position: 'relative' }}>
                     <input

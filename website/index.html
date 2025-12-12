@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoleBeat Music - The Ultimate Desktop Player</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="background-glow"></div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon-wrapper">
+                <i data-lucide="zap" class="logo-icon"></i>
+            </div>
+            <span>MoleBeat</span>
+        </div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="https://github.com/topalemirfaruk/molebeatmusic" target="_blank" class="btn-github">
+                <i data-lucide="github" size="18"></i> GitHub
+            </a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <div class="badge">v1.0.0 Now Available</div>
+                <h1>Experience Music <br><span class="gradient-text">Without Limits</span></h1>
+                <p>A powerful, open-source desktop music player built for audiophiles who love their local library.
+                    Fast, beautiful, and completely yours.</p>
+
+                <div class="cta-group">
+                    <a href="https://github.com/topalemirfaruk/molebeatmusic/releases" class="btn-primary">
+                        <i data-lucide="download"></i> Download for Linux
+                    </a>
+                    <a href="https://github.com/topalemirfaruk/molebeatmusic" class="btn-secondary">
+                        View Source Code
+                    </a>
+                </div>
+            </div>
+
+            <div class="visualizer-container">
+                <div class="visualizer-circle">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                <div class="icon-center">
+                    <i data-lucide="music" size="48"></i>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="features-header">
+                <h2>Crafted for Performance</h2>
+                <p>Every detail designed to enhance your listening experience.</p>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="card-icon"><i data-lucide="hard-drive"></i></div>
+                    <h3>Local First</h3>
+                    <p>Your music stays on your device. No cloud dependencies, no buffering, just instant playback.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon"><i data-lucide="sliders"></i></div>
+                    <h3>Audio Control</h3>
+                    <p>Fine-tune your experience with playback speed control (0.5x - 2.0x) and global volume.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon"><i data-lucide="moon"></i></div>
+                    <h3>Dark Aesthetics</h3>
+                    <p>A stunning dark interface that's easy on the eyes, day or night.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon"><i data-lucide="zap"></i></div>
+                    <h3>Lightning Fast</h3>
+                    <p>Built with Electron and React for maximum performance and responsiveness.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-left">
+                <h3>MoleBeat Music</h3>
+                <p>Open Source Desktop Music Player</p>
+            </div>
+            <div class="footer-right">
+                <a href="https://github.com/topalemirfaruk/molebeatmusic">GitHub</a>
+                <a href="#">License</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 MoleBeat Team. Built with ❤️ using React & Electron.
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

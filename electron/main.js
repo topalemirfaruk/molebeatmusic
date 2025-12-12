@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -39,6 +39,20 @@ function createWindow() {
                     win.webContents.send('youtube-code', code);
                 });
             }
+        }
+    });
+
+    ipcMain.on('set-mini-player-mode', (event, enabled) => {
+        if (enabled) {
+            if (win.isMaximized()) {
+                win.unmaximize();
+            }
+            win.setSize(300, 150);
+            win.setAlwaysOnTop(true);
+        } else {
+            win.setSize(1200, 800);
+            win.setAlwaysOnTop(false);
+            win.center();
         }
     });
 }

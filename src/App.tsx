@@ -4,7 +4,9 @@ import TrackList from './components/TrackList';
 import Albums from './components/Albums';
 import Favorites from './components/Favorites';
 import Settings from './components/Settings';
-
+import Playlists from './components/Playlists';
+import PlaylistDetail from './components/PlaylistDetail';
+import LyricsView from './components/LyricsView';
 import { PlayerProvider } from './context/PlayerContext';
 
 function App() {
@@ -15,8 +17,11 @@ function App() {
           <Routes>
             <Route path="/" element={<TrackList />} />
             <Route path="/albums" element={<Albums />} />
+            <Route path="/playlists" element={<Playlists />} />
+            <Route path="/playlists/:id" element={<PlaylistDetail />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/lyrics" element={<LyricsView />} />
           </Routes>
         </Layout>
       </Router>

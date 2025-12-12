@@ -16,6 +16,11 @@ MoleBeat Music is a modern, desktop music player built with Electron, React, and
     *   Seek Bar & Time Display
 *   **Modern UI:** A clean, dark-themed aesthetic built with custom CSS and Lucide icons.
 *   **Track Options:** Rename or delete tracks directly from the list.
+*   **Mini Player Mode:** Keep your music on top with a compact, Picture-in-Picture style player.
+*   **Theme Engine:** Customize the look with 6 different accent colors (Pink, Blue, Green, Purple, Orange, Cyan).
+*   **Drag & Drop Support:** Simply drag music files into the app to add them to your library.
+*   **Playlists:** Create, manage, and organize your favorite tracks into playlists.
+*   **Synced Lyrics:** View synchronized lyrics for your tracks (LRC support).
 *   **Storage Insights:** View real-time storage usage of your library in Settings.
 
 ## 🛠️ Tech Stack

@@ -1,17 +1,38 @@
 import React, { useState, useRef } from 'react';
-import { Search, Heart, MoreVertical, Plus } from 'lucide-react';
+import { Search, Heart, MoreVertical, Plus, ListPlus } from 'lucide-react';
 import { usePlayer, type Track } from '../context/PlayerContext';
 
+interface TrackListProps {
+    tracks?: Track[];
+    hideAddButton?: boolean;
+    onRemoveTrack?: (id: number) => void;
+}
 
-const TrackList: React.FC = () => {
-    const { tracks, playTrack, toggleFavorite, favorites, currentTrack, addTrack, removeTrack, updateTrackTitle } = usePlayer();
+const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton, onRemoveTrack }) => {
+    const {
+        tracks: contextTracks,
+        playTrack,
+        toggleFavorite,
+        favorites,
+        currentTrack,
+        addTrack,
+        removeTrack,
+        updateTrackTitle,
+        playlists,
+        addTrackToPlaylist
+    } = usePlayer();
+
+    const tracksToUse = propTracks || contextTracks;
+
     const [searchTerm, setSearchTerm] = useState('');
     const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
     const [editingTrackId, setEditingTrackId] = useState<number | null>(null);
     const [editTitle, setEditTitle] = useState('');
+    const [showPlaylistSubmenu, setShowPlaylistSubmenu] = useState<number | null>(null);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const filteredTracks = tracks.filter(track =>
+    const filteredTracks = tracksToUse.filter(track =>
         track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         track.artist.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -27,6 +48,7 @@ const TrackList: React.FC = () => {
         setEditingTrackId(track.id);
         setEditTitle(track.title);
         setActiveMenuId(null);
+        setShowPlaylistSubmenu(null);
     };
 
     const saveTitle = (id: number) => {
@@ -36,8 +58,14 @@ const TrackList: React.FC = () => {
         setEditingTrackId(null);
     };
 
+    const handleAddToPlaylist = async (playlistId: string, trackId: number) => {
+        await addTrackToPlaylist(playlistId, trackId);
+        setActiveMenuId(null);
+        setShowPlaylistSubmenu(null);
+    };
+
     return (
-        <div className="page-content" style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', height: 'calc(100vh - 90px)' }} onClick={() => setActiveMenuId(null)}>
+        <div className="page-content" style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', height: 'calc(100vh - 90px)' }} onClick={() => { setActiveMenuId(null); setShowPlaylistSubmenu(null); }}>
             {/* Header / Search Bar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#666', flex: 1 }}>
@@ -59,32 +87,36 @@ const TrackList: React.FC = () => {
                 </div>
 
                 {/* Add Music Button */}
-                <div
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        backgroundColor: '#ff4b6e',
-                        padding: '10px 20px',
-                        borderRadius: '25px',
-                        cursor: 'pointer',
-                        color: '#fff',
-                        fontWeight: 500,
-                        fontSize: '14px',
-                        boxShadow: '0 4px 12px rgba(255, 75, 110, 0.3)'
-                    }}
-                >
-                    <Plus size={18} />
-                    <span>Add Music</span>
-                </div>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="audio/*"
-                    style={{ display: 'none' }}
-                />
+                {!hideAddButton && (
+                    <>
+                        <div
+                            onClick={() => fileInputRef.current?.click()}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                backgroundColor: 'var(--accent-color)',
+                                padding: '10px 20px',
+                                borderRadius: '25px',
+                                cursor: 'pointer',
+                                color: '#fff',
+                                fontWeight: 500,
+                                fontSize: '14px',
+                                boxShadow: '0 4px 12px rgba(255, 75, 110, 0.3)'
+                            }}
+                        >
+                            <Plus size={18} />
+                            <span>Add Music</span>
+                        </div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="audio/*"
+                            style={{ display: 'none' }}
+                        />
+                    </>
+                )}
             </div>
 
             {/* List */}
@@ -137,8 +169,8 @@ const TrackList: React.FC = () => {
                             >
                                 <Heart
                                     size={18}
-                                    color={isFavorite ? "#ff4b6e" : "#666"}
-                                    fill={isFavorite ? "#ff4b6e" : "none"}
+                                    color={isFavorite ? "var(--accent-color)" : "#666"}
+                                    fill={isFavorite ? "var(--accent-color)" : "none"}
                                 />
                             </div>
 
@@ -159,7 +191,7 @@ const TrackList: React.FC = () => {
                                         style={{
                                             background: 'transparent',
                                             border: 'none',
-                                            borderBottom: '1px solid #ff4b6e',
+                                            borderBottom: '1px solid var(--accent-color)',
                                             color: '#fff',
                                             fontSize: '14px',
                                             fontWeight: 500,
@@ -182,6 +214,7 @@ const TrackList: React.FC = () => {
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setActiveMenuId(activeMenuId === track.id ? null : track.id);
+                                        setShowPlaylistSubmenu(null);
                                     }}
                                     style={{ padding: '5px', cursor: 'pointer' }}
                                 >
@@ -198,8 +231,67 @@ const TrackList: React.FC = () => {
                                         padding: '5px',
                                         zIndex: 10,
                                         boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                                        minWidth: '120px'
+                                        minWidth: '160px'
                                     }}>
+                                        <div
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowPlaylistSubmenu(showPlaylistSubmenu === track.id ? null : track.id);
+                                            }}
+                                            style={{
+                                                padding: '8px 12px',
+                                                color: '#fff',
+                                                fontSize: '14px',
+                                                cursor: 'pointer',
+                                                borderRadius: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                position: 'relative'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            <ListPlus size={14} />
+                                            Add to Playlist
+                                            {showPlaylistSubmenu === track.id && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    right: '100%',
+                                                    top: 0,
+                                                    backgroundColor: '#2a2a2a',
+                                                    borderRadius: '8px',
+                                                    padding: '5px',
+                                                    zIndex: 11,
+                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                                                    minWidth: '150px',
+                                                    marginRight: '5px'
+                                                }}>
+                                                    {playlists.length > 0 ? playlists.map(p => (
+                                                        <div
+                                                            key={p.id}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleAddToPlaylist(p.id, track.id);
+                                                            }}
+                                                            style={{
+                                                                padding: '8px 12px',
+                                                                color: '#fff',
+                                                                fontSize: '13px',
+                                                                cursor: 'pointer',
+                                                                borderRadius: '4px'
+                                                            }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                        >
+                                                            {p.name}
+                                                        </div>
+                                                    )) : (
+                                                        <div style={{ padding: '8px 12px', color: '#666', fontSize: '12px' }}>No playlists</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                         <div
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -223,7 +315,11 @@ const TrackList: React.FC = () => {
                                         <div
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                removeTrack(track.id);
+                                                if (onRemoveTrack) {
+                                                    onRemoveTrack(track.id);
+                                                } else {
+                                                    removeTrack(track.id);
+                                                }
                                                 setActiveMenuId(null);
                                             }}
                                             style={{
@@ -239,7 +335,7 @@ const TrackList: React.FC = () => {
                                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 75, 110, 0.1)'}
                                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
-                                            Delete
+                                            {onRemoveTrack ? 'Remove from Playlist' : 'Delete'}
                                         </div>
                                     </div>
                                 )}

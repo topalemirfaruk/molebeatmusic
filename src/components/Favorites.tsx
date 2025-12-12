@@ -134,12 +134,12 @@ const Favorites: React.FC = () => {
                                         toggleFavorite(track.id);
                                     }}
                                 >
-                                    <Heart size={18} color="#ff4b6e" fill="#ff4b6e" />
+                                    <Heart size={18} color="var(--accent-color)" fill="var(--accent-color)" />
                                 </div>
 
                                 {/* Title & Artist */}
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ color: isCurrent ? '#ff4b6e' : '#fff', fontSize: '14px', fontWeight: 500 }}>{track.title}</div>
+                                    <div style={{ color: isCurrent ? 'var(--accent-color)' : '#fff', fontSize: '14px', fontWeight: 500 }}>{track.title}</div>
                                     <div style={{ color: '#666', fontSize: '12px' }}>{track.artist}</div>
                                 </div>
 

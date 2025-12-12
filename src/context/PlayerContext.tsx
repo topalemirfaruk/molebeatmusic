@@ -1,6 +1,27 @@
 import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
-import { saveTrack, getAllTracks, deleteTrack, updateTrack, clearAllTracks } from '../utils/db';
+import {
+    saveTrack,
+    getAllTracks,
+    deleteTrack,
+    updateTrack,
+    clearAllTracks,
+    createPlaylist,
+    deletePlaylist,
+    updatePlaylist,
+    getAllPlaylists,
+    type Playlist
+} from '../utils/db';
 import { extractMetadata } from '../utils/metadata';
+import { fetchLyrics, parseLRC, type LyricLine } from '../utils/lyrics';
+
+declare global {
+    interface Window {
+        electronAPI?: {
+            onYouTubeCode: (callback: (code: string) => void) => void;
+            toggleMiniPlayer: (enabled: boolean) => void;
+        };
+    }
+}
 
 export interface Track {
     id: number;
@@ -20,6 +41,7 @@ interface PlayerContextType {
     currentTime: number;
     duration: number;
     favorites: number[];
+    playlists: Playlist[];
     playTrack: (track: Track) => void;
     togglePlay: () => void;
     toggleFavorite: (trackId: number) => void;
@@ -28,9 +50,20 @@ interface PlayerContextType {
     setPlaybackRate: (rate: number) => void;
     formatTime: (time: number) => string;
     addTrack: (file: File) => void;
+    addTracks: (files: File[]) => void;
     removeTrack: (id: number) => void;
     updateTrackTitle: (id: number, newTitle: string) => void;
     clearLibrary: () => void;
+    createNewPlaylist: (name: string) => Promise<void>;
+    removePlaylist: (id: string) => Promise<void>;
+    addTrackToPlaylist: (playlistId: string, trackId: number) => Promise<void>;
+    removeTrackFromPlaylist: (playlistId: string, trackId: number) => Promise<void>;
+    lyrics: LyricLine[];
+    currentLineIndex: number;
+    isMiniPlayer: boolean;
+    toggleMiniPlayerMode: () => void;
+    themeColor: string;
+    setThemeColor: (color: string) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -60,30 +93,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return saved ? JSON.parse(saved) : [];
     });
 
+    const [playlists, setPlaylists] = useState<Playlist[]>([]);
+    const [lyrics, setLyrics] = useState<LyricLine[]>([]);
+    const [currentLineIndex, setCurrentLineIndex] = useState(-1);
+
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // Load tracks from DB
+    // Initialize Audio Element
     useEffect(() => {
-        const loadTracks = async () => {
-            try {
-                const storedTracks = await getAllTracks();
-                console.log("Loaded tracks from DB:", storedTracks);
-                if (storedTracks.length > 0) {
-                    setTracks(prev => [...storedTracks, ...prev]);
-                }
-            } catch (error) {
-                console.error("Failed to load tracks from DB:", error);
-            }
-        };
-        loadTracks();
-    }, []);
-
-    // Initialize audio element
-    useEffect(() => {
-        audioRef.current = new Audio();
-        audioRef.current.volume = volume;
-
-        const audio = audioRef.current;
+        const audio = new Audio();
+        audio.crossOrigin = "anonymous";
+        audioRef.current = audio;
 
         const updateTime = () => setCurrentTime(audio.currentTime);
         const updateDuration = () => setDuration(audio.duration || 0);
@@ -100,6 +120,69 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
     }, []);
 
+    // Fetch Lyrics when track changes
+    useEffect(() => {
+        const getLyrics = async () => {
+            if (currentTrack) {
+                setLyrics([]); // Clear previous lyrics
+                setCurrentLineIndex(-1);
+                // Convert duration string "MM:SS" to seconds
+                const [min, sec] = currentTrack.duration.split(':').map(Number);
+                const durationSec = min * 60 + sec;
+
+                const lyricsData = await fetchLyrics(currentTrack.artist, currentTrack.title, durationSec);
+                if (lyricsData) {
+                    const parsed = parseLRC(lyricsData);
+                    setLyrics(parsed);
+                }
+            } else {
+                setLyrics([]);
+            }
+        };
+        getLyrics();
+    }, [currentTrack]);
+
+    // Update current line index based on time
+    useEffect(() => {
+        if (lyrics.length > 0) {
+            const index = lyrics.findIndex((line, i) => {
+                const nextLine = lyrics[i + 1];
+                return currentTime >= line.time && (!nextLine || currentTime < nextLine.time);
+            });
+            if (index !== -1 && index !== currentLineIndex) {
+                setCurrentLineIndex(index);
+            }
+        }
+    }, [currentTime, lyrics]);
+
+    // Load tracks from DB
+    useEffect(() => {
+        const loadTracks = async () => {
+            try {
+                const storedTracks = await getAllTracks();
+                if (storedTracks.length > 0) {
+                    setTracks(prev => [...storedTracks, ...prev]);
+                }
+            } catch (error) {
+                console.error("Failed to load tracks from DB:", error);
+            }
+        };
+        loadTracks();
+    }, []);
+
+    // Load playlists from DB
+    useEffect(() => {
+        const loadPlaylists = async () => {
+            try {
+                const storedPlaylists = await getAllPlaylists();
+                setPlaylists(storedPlaylists);
+            } catch (error) {
+                console.error("Failed to load playlists:", error);
+            }
+        };
+        loadPlaylists();
+    }, []);
+
     // Handle Play/Pause
     useEffect(() => {
         if (currentTrack && audioRef.current) {
@@ -111,16 +194,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [isPlaying, currentTrack]);
 
-    const playTrack = (track: Track) => {
+    const playTrack = async (track: Track) => {
         if (currentTrack?.id === track.id) {
             togglePlay();
             return;
         }
 
         if (audioRef.current) {
-            // Use provided audioUrl or fallback to sample
             audioRef.current.src = track.audioUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
             audioRef.current.playbackRate = playbackRate;
+            audioRef.current.volume = volume;
             setCurrentTrack(track);
             setIsPlaying(true);
         }
@@ -154,6 +237,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
+    const setPlaybackRate = (rate: number) => {
+        setPlaybackRateState(rate);
+        if (audioRef.current) {
+            audioRef.current.playbackRate = rate;
+        }
+    };
+
     const formatTime = (time: number) => {
         if (isNaN(time)) return "0:00";
         const minutes = Math.floor(time / 60);
@@ -162,31 +252,59 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const addTrack = (file: File) => {
-        const audioUrl = URL.createObjectURL(file);
-        const tempAudio = new Audio(audioUrl);
+        addTracks([file]);
+    };
 
-        tempAudio.addEventListener('loadedmetadata', async () => {
-            const duration = tempAudio.duration;
-            const minutes = Math.floor(duration / 60);
-            const seconds = Math.floor(duration % 60);
-            const formattedDuration = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    const addTracks = async (files: File[]) => {
+        const newTracks: Track[] = [];
 
-            const metadata = await extractMetadata(file);
-            const title = metadata.title || file.name.replace(/\.[^/.]+$/, "");
-            const artist = metadata.artist || 'Local File';
-            const image = metadata.pictureBlob ? URL.createObjectURL(metadata.pictureBlob) : 'https://source.unsplash.com/random/50x50?music';
+        for (const file of files) {
+            // Create a promise to handle the async nature of audio metadata loading
+            const processFile = new Promise<Track>((resolve) => {
+                const audioUrl = URL.createObjectURL(file);
+                const tempAudio = new Audio(audioUrl);
 
-            const newTrack: Track = {
-                id: Date.now(),
-                title: title,
-                artist: artist,
-                duration: formattedDuration,
-                image: image,
-                audioUrl: audioUrl
-            };
-            setTracks(prev => [newTrack, ...prev]);
-            saveTrack(newTrack, file, metadata.pictureBlob).catch(e => console.error("Failed to save track:", e));
-        });
+                tempAudio.addEventListener('loadedmetadata', async () => {
+                    const duration = tempAudio.duration;
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = Math.floor(duration % 60);
+                    const formattedDuration = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                    const metadata = await extractMetadata(file);
+                    const title = metadata.title || file.name.replace(/\.[^/.]+$/, "");
+                    const artist = metadata.artist || 'Local File';
+                    const image = metadata.pictureBlob ? URL.createObjectURL(metadata.pictureBlob) : 'https://source.unsplash.com/random/50x50?music';
+
+                    const newTrack: Track = {
+                        id: Date.now() + Math.random(), // Ensure unique ID
+                        title: title,
+                        artist: artist,
+                        duration: formattedDuration,
+                        image: image,
+                        audioUrl: audioUrl
+                    };
+
+                    // Save to DB immediately
+                    saveTrack(newTrack, file, metadata.pictureBlob).catch(e => console.error("Failed to save track:", e));
+
+                    resolve(newTrack);
+                });
+
+                tempAudio.addEventListener('error', () => {
+                    console.error("Error loading audio file:", file.name);
+                    // Resolve with a dummy or null, but for now we just skip handling error gracefully in UI
+                    // In a real app we might want to reject or return null
+                    resolve({} as Track); // Should filter this out later if we were strict
+                });
+            });
+
+            const track = await processFile;
+            if (track.id) {
+                newTracks.push(track);
+            }
+        }
+
+        setTracks(prev => [...newTracks, ...prev]);
     };
 
     const removeTrack = (id: number) => {
@@ -218,13 +336,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }));
     };
 
-    const setPlaybackRate = (rate: number) => {
-        setPlaybackRateState(rate);
-        if (audioRef.current) {
-            audioRef.current.playbackRate = rate;
-        }
-    };
-
     const clearLibrary = async () => {
         setTracks([]);
         setFavorites([]);
@@ -238,6 +349,59 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await clearAllTracks();
     };
 
+    const createNewPlaylist = async (name: string) => {
+        const newPlaylist = await createPlaylist(name);
+        setPlaylists(prev => [...prev, newPlaylist]);
+    };
+
+    const removePlaylist = async (id: string) => {
+        await deletePlaylist(id);
+        setPlaylists(prev => prev.filter(p => p.id !== id));
+    };
+
+    const [isMiniPlayer, setIsMiniPlayer] = useState(false);
+
+    const toggleMiniPlayerMode = () => {
+        const newState = !isMiniPlayer;
+        setIsMiniPlayer(newState);
+        if (window.electronAPI) {
+            window.electronAPI.toggleMiniPlayer(newState);
+        }
+    };
+
+    const [themeColor, setThemeColorState] = useState('#ff4b6e');
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('themeColor');
+        if (savedTheme) {
+            setThemeColor(savedTheme);
+        }
+    }, []);
+
+    const setThemeColor = (color: string) => {
+        setThemeColorState(color);
+        document.documentElement.style.setProperty('--accent-color', color);
+        localStorage.setItem('themeColor', color);
+    };
+
+    const addTrackToPlaylist = async (playlistId: string, trackId: number) => {
+        const playlist = playlists.find(p => p.id === playlistId);
+        if (playlist && !playlist.trackIds.includes(trackId)) {
+            const updatedPlaylist = { ...playlist, trackIds: [...playlist.trackIds, trackId] };
+            await updatePlaylist(updatedPlaylist);
+            setPlaylists(prev => prev.map(p => p.id === playlistId ? updatedPlaylist : p));
+        }
+    };
+
+    const removeTrackFromPlaylist = async (playlistId: string, trackId: number) => {
+        const playlist = playlists.find(p => p.id === playlistId);
+        if (playlist) {
+            const updatedPlaylist = { ...playlist, trackIds: playlist.trackIds.filter(id => id !== trackId) };
+            await updatePlaylist(updatedPlaylist);
+            setPlaylists(prev => prev.map(p => p.id === playlistId ? updatedPlaylist : p));
+        }
+    };
+
     return (
         <PlayerContext.Provider value={{
             tracks,
@@ -247,6 +411,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             currentTime,
             duration,
             favorites,
+            playlists,
             playTrack,
             togglePlay,
             toggleFavorite,
@@ -256,9 +421,20 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setPlaybackRate,
             formatTime,
             addTrack,
+            addTracks,
             removeTrack,
             updateTrackTitle,
-            clearLibrary
+            clearLibrary,
+            createNewPlaylist,
+            removePlaylist,
+            addTrackToPlaylist,
+            removeTrackFromPlaylist,
+            lyrics,
+            currentLineIndex,
+            isMiniPlayer,
+            toggleMiniPlayerMode,
+            themeColor,
+            setThemeColor
         }}>
             {children}
         </PlayerContext.Provider>

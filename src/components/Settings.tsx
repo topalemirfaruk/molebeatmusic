@@ -9,13 +9,14 @@ import {
     Trash2,
     Github,
     Globe,
-    Zap
+    Zap,
+    Palette
 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { getDatabaseUsage } from '../utils/db';
 
 const Settings: React.FC = () => {
-    const { volume, setVolume, tracks, favorites, playbackRate, setPlaybackRate, clearLibrary } = usePlayer();
+    const { volume, setVolume, tracks, favorites, playbackRate, setPlaybackRate, clearLibrary, themeColor, setThemeColor } = usePlayer();
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [storageUsed, setStorageUsed] = useState<string>('Calculating...');
 
@@ -38,7 +39,7 @@ const Settings: React.FC = () => {
 
     const SectionTitle = ({ title, icon: Icon }: { title: string, icon: any }) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', marginTop: '30px' }}>
-            <Icon size={20} color="#ff4b6e" />
+            <Icon size={20} color="var(--accent-color)" />
             <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#fff' }}>{title}</h2>
         </div>
     );
@@ -123,6 +124,44 @@ const Settings: React.FC = () => {
                 </div>
             </SettingItem>
 
+            {/* Theme Settings */}
+            <SectionTitle title="Theme" icon={Palette} />
+            <div style={{
+                backgroundColor: '#252525',
+                padding: '20px',
+                borderRadius: '12px',
+                display: 'flex',
+                gap: '15px',
+                flexWrap: 'wrap',
+                marginBottom: '20px'
+            }}>
+                {[
+                    { name: 'Pink', color: '#ff4b6e' },
+                    { name: 'Blue', color: '#4b6eff' },
+                    { name: 'Green', color: '#4bff6e' },
+                    { name: 'Purple', color: '#be4bff' },
+                    { name: 'Orange', color: '#ffbe4b' },
+                    { name: 'Cyan', color: '#4bbeff' },
+                ].map((theme) => (
+                    <div
+                        key={theme.name}
+                        onClick={() => setThemeColor(theme.color)}
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            backgroundColor: theme.color,
+                            cursor: 'pointer',
+                            border: themeColor === theme.color ? '3px solid white' : '3px solid transparent',
+                            transition: 'all 0.2s',
+                            transform: themeColor === theme.color ? 'scale(1.1)' : 'scale(1)',
+                            boxShadow: themeColor === theme.color ? `0 0 15px ${theme.color}` : 'none'
+                        }}
+                        title={theme.name}
+                    />
+                ))}
+            </div>
+
             {/* Appearance Settings */}
             <SectionTitle title="Appearance" icon={Monitor} />
 
@@ -145,7 +184,7 @@ const Settings: React.FC = () => {
                     <div style={{
                         padding: '6px',
                         borderRadius: '50%',
-                        backgroundColor: isDarkMode ? '#ff4b6e' : 'transparent',
+                        backgroundColor: isDarkMode ? 'var(--accent-color)' : 'transparent',
                         transition: 'all 0.2s'
                     }}>
                         <Moon size={14} color={isDarkMode ? '#fff' : '#666'} />
@@ -153,7 +192,7 @@ const Settings: React.FC = () => {
                     <div style={{
                         padding: '6px',
                         borderRadius: '50%',
-                        backgroundColor: !isDarkMode ? '#ff4b6e' : 'transparent',
+                        backgroundColor: !isDarkMode ? 'var(--accent-color)' : 'transparent',
                         transition: 'all 0.2s'
                     }}>
                         <Sun size={14} color={!isDarkMode ? '#fff' : '#666'} />
@@ -166,15 +205,15 @@ const Settings: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
                 <div style={{ backgroundColor: '#252525', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#ff4b6e', marginBottom: '5px' }}>{tracks.length}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent-color)', marginBottom: '5px' }}>{tracks.length}</div>
                     <div style={{ color: '#a0a0a0', fontSize: '13px' }}>Total Tracks</div>
                 </div>
                 <div style={{ backgroundColor: '#252525', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#ff4b6e', marginBottom: '5px' }}>{favorites.length}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent-color)', marginBottom: '5px' }}>{favorites.length}</div>
                     <div style={{ color: '#a0a0a0', fontSize: '13px' }}>Favorites</div>
                 </div>
                 <div style={{ backgroundColor: '#252525', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#ff4b6e', marginBottom: '5px' }}>{storageUsed}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent-color)', marginBottom: '5px' }}>{storageUsed}</div>
                     <div style={{ color: '#a0a0a0', fontSize: '13px' }}>Storage Used</div>
                 </div>
             </div>
@@ -188,7 +227,7 @@ const Settings: React.FC = () => {
                     onClick={handleClearDatabase}
                     style={{
                         backgroundColor: 'rgba(255, 75, 110, 0.1)',
-                        color: '#ff4b6e',
+                        color: 'var(--accent-color)',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '8px',
@@ -205,11 +244,13 @@ const Settings: React.FC = () => {
                 </button>
             </SettingItem>
 
+
+
             {/* About Section */}
             <SectionTitle title="About" icon={Info} />
 
             <div style={{ backgroundColor: '#252525', borderRadius: '12px', padding: '30px', textAlign: 'center' }}>
-                <div style={{ width: '60px', height: '60px', backgroundColor: '#ff4b6e', borderRadius: '15px', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '60px', height: '60px', backgroundColor: 'var(--accent-color)', borderRadius: '15px', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Zap size={32} color="#fff" fill="currentColor" />
                 </div>
                 <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '5px' }}>MoleBeat Music</h3>

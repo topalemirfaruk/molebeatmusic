@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Heart, Settings, Music } from 'lucide-react';
+import { Home, Heart, Settings, Music, ListMusic } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar: React.FC = () => {
@@ -30,7 +30,9 @@ const Sidebar: React.FC = () => {
             flexDirection: 'column',
             alignItems: 'center',
             paddingTop: '40px',
-            gap: '30px'
+            gap: '30px',
+            position: 'relative',
+            zIndex: 50
         }}>
             <div style={{
                 width: '50px',
@@ -58,6 +60,14 @@ const Sidebar: React.FC = () => {
                     onClick={() => navigate('/albums')}
                 >
                     <Music size={20} />
+                </div>
+
+                <div
+                    className={`sidebar-icon ${isActive('/playlists') ? 'active' : ''}`}
+                    style={iconContainerStyle(isActive('/playlists'))}
+                    onClick={() => navigate('/playlists')}
+                >
+                    <ListMusic size={20} />
                 </div>
 
                 <div

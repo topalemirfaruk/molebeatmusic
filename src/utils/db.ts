@@ -1,21 +1,36 @@
 import { openDB, type DBSchema } from 'idb';
 import type { Track } from '../context/PlayerContext';
 
+export interface Playlist {
+    id: string;
+    name: string;
+    created: number;
+    trackIds: number[];
+}
+
 interface MoleBeatDB extends DBSchema {
     tracks: {
         key: number;
         value: Track & { file: Blob, imageBlob?: Blob };
     };
+    playlists: {
+        key: string;
+        value: Playlist;
+    };
 }
 
 const DB_NAME = 'molebeat-db';
 const STORE_NAME = 'tracks';
+const PLAYLIST_STORE_NAME = 'playlists';
 
 export const initDB = async () => {
-    return openDB<MoleBeatDB>(DB_NAME, 1, {
+    return openDB<MoleBeatDB>(DB_NAME, 2, {
         upgrade(db) {
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains(PLAYLIST_STORE_NAME)) {
+                db.createObjectStore(PLAYLIST_STORE_NAME, { keyPath: 'id' });
             }
         },
     });
@@ -67,3 +82,33 @@ export const getDatabaseUsage = async (): Promise<number> => {
     }
     return 0;
 };
+
+// Playlist Functions
+
+export const createPlaylist = async (name: string): Promise<Playlist> => {
+    const db = await initDB();
+    const newPlaylist: Playlist = {
+        id: crypto.randomUUID(),
+        name,
+        created: Date.now(),
+        trackIds: []
+    };
+    await db.add(PLAYLIST_STORE_NAME, newPlaylist);
+    return newPlaylist;
+};
+
+export const getAllPlaylists = async (): Promise<Playlist[]> => {
+    const db = await initDB();
+    return await db.getAll(PLAYLIST_STORE_NAME);
+};
+
+export const deletePlaylist = async (id: string) => {
+    const db = await initDB();
+    await db.delete(PLAYLIST_STORE_NAME, id);
+};
+
+export const updatePlaylist = async (playlist: Playlist) => {
+    const db = await initDB();
+    await db.put(PLAYLIST_STORE_NAME, playlist);
+};
+

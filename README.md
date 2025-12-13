@@ -20,6 +20,8 @@ MoleBeat Music is a modern, desktop music player built with Electron, React, and
 *   **Theme Engine:** Customize the look with 6 different accent colors (Pink, Blue, Green, Purple, Orange, Cyan).
 *   **Drag & Drop Support:** Simply drag music files into the app to add them to your library.
 *   **Playlists:** Create, manage, and organize your favorite tracks into playlists.
+*   **Dynamic Albums:** Automatically groups your tracks by album and artist.
+*   **Professional Equalizer:** 10-band equalizer with presets (Bass Boost, Rock, Pop, etc.) for the perfect sound.
 *   **Synced Lyrics:** View synchronized lyrics for your tracks (LRC support).
 *   **Storage Insights:** View real-time storage usage of your library in Settings.
 

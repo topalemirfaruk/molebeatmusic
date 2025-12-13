@@ -27,6 +27,7 @@ export interface Track {
     id: number;
     title: string;
     artist: string;
+    album?: string;
     duration: string;
     image: string;
     audioUrl?: string;
@@ -64,6 +65,9 @@ interface PlayerContextType {
     toggleMiniPlayerMode: () => void;
     themeColor: string;
     setThemeColor: (color: string) => void;
+    equalizerBands: number[];
+    setEqualizerBand: (index: number, value: number) => void;
+    setEqualizerPreset: (preset: number[]) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -273,12 +277,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     const metadata = await extractMetadata(file);
                     const title = metadata.title || file.name.replace(/\.[^/.]+$/, "");
                     const artist = metadata.artist || 'Local File';
+                    const album = metadata.album || 'Unknown Album';
                     const image = metadata.pictureBlob ? URL.createObjectURL(metadata.pictureBlob) : 'https://source.unsplash.com/random/50x50?music';
 
                     const newTrack: Track = {
                         id: Date.now() + Math.random(), // Ensure unique ID
                         title: title,
                         artist: artist,
+                        album: album,
                         duration: formattedDuration,
                         image: image,
                         audioUrl: audioUrl
@@ -402,6 +408,87 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
+    // Equalizer State
+    const [equalizerBands, setEqualizerBands] = useState<number[]>(new Array(10).fill(0));
+    const filtersRef = useRef<BiquadFilterNode[]>([]);
+    const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+
+    // Initialize Audio Context and Equalizer
+    useEffect(() => {
+        if (!audioRef.current) return;
+
+        const initAudioContext = () => {
+            if (!audioContextRef.current) {
+                const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+                audioContextRef.current = new AudioContext();
+
+                const audio = audioRef.current!;
+                if (!sourceRef.current) {
+                    sourceRef.current = audioContextRef.current.createMediaElementSource(audio);
+                }
+
+                // Create filters
+                const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
+                const filters = frequencies.map(freq => {
+                    const filter = audioContextRef.current!.createBiquadFilter();
+                    filter.type = 'peaking';
+                    filter.frequency.value = freq;
+                    filter.Q.value = 1;
+                    filter.gain.value = 0;
+                    return filter;
+                });
+
+                filtersRef.current = filters;
+
+                // Connect nodes: Source -> Filter1 -> Filter2 ... -> Destination
+                let currentNode: AudioNode = sourceRef.current;
+                filters.forEach(filter => {
+                    currentNode.connect(filter);
+                    currentNode = filter;
+                });
+                currentNode.connect(audioContextRef.current.destination);
+            }
+        };
+
+        // Initialize on first user interaction to comply with autoplay policies
+        const handleInteraction = () => {
+            initAudioContext();
+            if (audioContextRef.current?.state === 'suspended') {
+                audioContextRef.current.resume();
+            }
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('keydown', handleInteraction);
+        };
+
+        window.addEventListener('click', handleInteraction);
+        window.addEventListener('keydown', handleInteraction);
+
+        return () => {
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('keydown', handleInteraction);
+        };
+    }, []);
+
+    const setEqualizerBand = (index: number, value: number) => {
+        const newBands = [...equalizerBands];
+        newBands[index] = value;
+        setEqualizerBands(newBands);
+
+        if (filtersRef.current[index]) {
+            filtersRef.current[index].gain.value = value;
+        }
+    };
+
+    const setEqualizerPreset = (preset: number[]) => {
+        setEqualizerBands(preset);
+        preset.forEach((value, index) => {
+            if (filtersRef.current[index]) {
+                filtersRef.current[index].gain.value = value;
+            }
+        });
+    };
+
     return (
         <PlayerContext.Provider value={{
             tracks,
@@ -434,7 +521,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isMiniPlayer,
             toggleMiniPlayerMode,
             themeColor,
-            setThemeColor
+            setThemeColor,
+            equalizerBands,
+            setEqualizerBand,
+            setEqualizerPreset
         }}>
             {children}
         </PlayerContext.Provider>

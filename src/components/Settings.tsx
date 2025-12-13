@@ -16,7 +16,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { getDatabaseUsage } from '../utils/db';
 
 const Settings: React.FC = () => {
-    const { volume, setVolume, tracks, favorites, playbackRate, setPlaybackRate, clearLibrary, themeColor, setThemeColor } = usePlayer();
+    const { volume, setVolume, tracks, favorites, playbackRate, setPlaybackRate, clearLibrary, themeColor, setThemeColor, equalizerBands, setEqualizerBand, setEqualizerPreset } = usePlayer();
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [storageUsed, setStorageUsed] = useState<string>('Calculating...');
 
@@ -123,6 +123,72 @@ const Settings: React.FC = () => {
                     </select>
                 </div>
             </SettingItem>
+
+            {/* Equalizer Settings */}
+            <SectionTitle title="Equalizer" icon={Zap} />
+            <div style={{ backgroundColor: '#252525', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div style={{ color: '#fff', fontSize: '15px' }}>10-Band EQ</div>
+                    <select
+                        onChange={(e) => {
+                            const presets: { [key: string]: number[] } = {
+                                'flat': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                'bass': [5, 4, 3, 2, 0, 0, 0, 0, 0, 0],
+                                'rock': [4, 3, 2, 0, -1, -1, 0, 2, 3, 4],
+                                'pop': [-1, 1, 3, 4, 4, 3, 1, -1, -1, -1],
+                                'jazz': [3, 2, 1, 2, -2, -2, 0, 1, 2, 3],
+                                'classical': [4, 3, 2, 1, -1, -1, 0, 2, 3, 4]
+                            };
+                            const val = e.target.value;
+                            if (presets[val]) {
+                                setEqualizerPreset(presets[val]);
+                            }
+                        }}
+                        style={{
+                            backgroundColor: '#333',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                        }}
+                    >
+                        <option value="flat">Flat</option>
+                        <option value="bass">Bass Boost</option>
+                        <option value="rock">Rock</option>
+                        <option value="pop">Pop</option>
+                        <option value="jazz">Jazz</option>
+                        <option value="classical">Classical</option>
+                    </select>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', height: '150px', alignItems: 'flex-end', gap: '10px' }}>
+                    {equalizerBands.map((gain, index) => (
+                        <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                            <input
+                                type="range"
+                                min="-12"
+                                max="12"
+                                value={gain}
+                                onChange={(e) => setEqualizerBand(index, parseInt(e.target.value))}
+                                style={{
+                                    writingMode: 'bt-lr', /* IE */
+                                    WebkitAppearance: 'slider-vertical', /* WebKit */
+                                    width: '8px',
+                                    height: '100px',
+                                    outline: 'none',
+                                    cursor: 'pointer',
+                                    accentColor: 'var(--accent-color)'
+                                } as any}
+                            />
+                            <div style={{ color: '#666', fontSize: '10px', marginTop: '10px' }}>
+                                {[60, 170, 310, 600, '1k', '3k', '6k', '12k', '14k', '16k'][index]}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
             {/* Theme Settings */}
             <SectionTitle title="Theme" icon={Palette} />

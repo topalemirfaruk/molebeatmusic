@@ -7,6 +7,10 @@
     "name": "MoleBeat",
     "email": "support@molebeat.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/topalemirfaruk/molebeatmusic.git"
+  },
   "type": "module",
   "main": "electron/main.js",
   "scripts": {

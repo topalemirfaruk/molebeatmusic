@@ -14,14 +14,7 @@ import {
 import { extractMetadata } from '../utils/metadata';
 import { fetchLyrics, parseLRC, type LyricLine } from '../utils/lyrics';
 
-declare global {
-    interface Window {
-        electronAPI?: {
-            onYouTubeCode: (callback: (code: string) => void) => void;
-            toggleMiniPlayer: (enabled: boolean) => void;
-        };
-    }
-}
+
 
 export interface Track {
     id: number;

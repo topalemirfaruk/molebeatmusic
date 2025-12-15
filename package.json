@@ -2,6 +2,11 @@
   "name": "molebeatmusic",
   "private": true,
   "version": "0.0.0",
+  "description": "A modern, beautiful music player",
+  "author": {
+    "name": "MoleBeat",
+    "email": "support@molebeat.com"
+  },
   "type": "module",
   "main": "electron/main.js",
   "scripts": {
@@ -10,7 +15,25 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron": "electron .",
-    "electron:dev": "concurrently -k \"npm run dev\" \"wait-on tcp:5173 && electron .\""
+    "electron:dev": "concurrently -k \"npm run dev\" \"wait-on tcp:5173 && electron .\"",
+    "dist": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.molebeat.music",
+    "productName": "MoleBeat Music",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Audio"
+    }
   },
   "dependencies": {
     "@types/jsmediatags": "^3.9.6",

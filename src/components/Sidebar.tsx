@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Heart, Settings, Music, ListMusic } from 'lucide-react';
+import { Home, Heart, Settings, Music, ListMusic, Disc } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar: React.FC = () => {
@@ -10,16 +10,17 @@ const Sidebar: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
 
     const iconContainerStyle = (active: boolean) => ({
-        width: '36px',
-        height: '36px',
-        backgroundColor: active ? '#fff' : 'transparent',
-        borderRadius: '50%',
+        width: '40px',
+        height: '40px',
+        backgroundColor: active ? 'var(--accent-color)' : 'transparent',
+        borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: active ? '#000' : '#666',
+        color: active ? '#fff' : '#666',
         cursor: 'pointer',
-        transition: 'all 0.2s'
+        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        boxShadow: active ? '0 4px 12px rgba(255, 75, 110, 0.3)' : 'none'
     });
 
     return (
@@ -55,11 +56,19 @@ const Sidebar: React.FC = () => {
                 </div>
 
                 <div
+                    className={`sidebar-icon ${isActive('/tracks') ? 'active' : ''}`}
+                    style={iconContainerStyle(isActive('/tracks'))}
+                    onClick={() => navigate('/tracks')}
+                >
+                    <Music size={20} />
+                </div>
+
+                <div
                     className={`sidebar-icon ${isActive('/albums') ? 'active' : ''}`}
                     style={iconContainerStyle(isActive('/albums'))}
                     onClick={() => navigate('/albums')}
                 >
-                    <Music size={20} />
+                    <Disc size={20} />
                 </div>
 
                 <div

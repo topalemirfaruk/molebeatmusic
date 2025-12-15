@@ -58,14 +58,19 @@ export const deleteTrack = async (id: number) => {
     await db.delete(STORE_NAME, id);
 };
 
-export const updateTrack = async (updatedTrack: Track) => {
+export const updateTrack = async (updatedTrack: Track, newImageBlob?: Blob) => {
     const db = await initDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     const existing = await store.get(updatedTrack.id);
     if (existing) {
-        // Preserve file and imageBlob from existing record
-        await store.put({ ...existing, ...updatedTrack, file: existing.file, imageBlob: existing.imageBlob });
+        // Preserve file from existing record, update imageBlob if provided
+        await store.put({
+            ...existing,
+            ...updatedTrack,
+            file: existing.file,
+            imageBlob: newImageBlob || existing.imageBlob
+        });
     }
     await tx.done;
 };

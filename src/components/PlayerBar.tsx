@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Volume2, Volume1, VolumeX, MessageSquareQuote, PictureInPicture } from 'lucide-react';
+import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Volume2, Volume1, VolumeX, MessageSquareQuote, PictureInPicture, Repeat1 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 
 const PlayerBar: React.FC = () => {
@@ -7,6 +7,12 @@ const PlayerBar: React.FC = () => {
         currentTrack,
         isPlaying,
         togglePlay,
+        playNext,
+        playPrevious,
+        toggleShuffle,
+        toggleRepeat,
+        isShuffling,
+        repeatMode,
         currentTime,
         duration,
         seek,
@@ -14,7 +20,8 @@ const PlayerBar: React.FC = () => {
         setVolume,
         formatTime,
         isMiniPlayer,
-        toggleMiniPlayerMode
+        toggleMiniPlayerMode,
+        themeColor
     } = usePlayer();
 
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,10 +34,8 @@ const PlayerBar: React.FC = () => {
 
     if (!currentTrack) {
         return (
-            <div style={{
+            <div className="glass" style={{
                 height: '90px',
-                backgroundColor: '#1e1c2e',
-                borderTop: '1px solid rgba(255,255,255,0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -105,7 +110,7 @@ const PlayerBar: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '5px' }}>
-                        <SkipBack size={20} color="#fff" style={{ cursor: 'pointer' }} />
+                        <SkipBack size={20} color="#fff" style={{ cursor: 'pointer' }} onClick={playPrevious} />
                         <div
                             onClick={togglePlay}
                             style={{
@@ -124,7 +129,7 @@ const PlayerBar: React.FC = () => {
                                 <Play size={18} fill="#000" color="#000" style={{ marginLeft: '2px' }} />
                             }
                         </div>
-                        <SkipForward size={20} color="#fff" style={{ cursor: 'pointer' }} />
+                        <SkipForward size={20} color="#fff" style={{ cursor: 'pointer' }} onClick={playNext} />
                     </div>
 
                     {/* Restore Button (Overlay on top right) */}
@@ -142,10 +147,8 @@ const PlayerBar: React.FC = () => {
     }
 
     return (
-        <div style={{
+        <div className="glass" style={{
             height: '90px',
-            backgroundColor: '#1e1c2e',
-            borderTop: '1px solid rgba(255,255,255,0.05)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -173,8 +176,18 @@ const PlayerBar: React.FC = () => {
             {/* Controls */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginBottom: '8px' }}>
-                    <Shuffle size={18} color="#666" style={{ cursor: 'pointer' }} />
-                    <SkipBack size={20} color="#fff" style={{ cursor: 'pointer' }} />
+                    <Shuffle
+                        size={18}
+                        color={isShuffling ? themeColor : "#666"}
+                        style={{ cursor: 'pointer' }}
+                        onClick={toggleShuffle}
+                    />
+                    <SkipBack
+                        size={20}
+                        color="#fff"
+                        style={{ cursor: 'pointer' }}
+                        onClick={playPrevious}
+                    />
 
                     <div
                         onClick={togglePlay}
@@ -196,8 +209,20 @@ const PlayerBar: React.FC = () => {
                         }
                     </div>
 
-                    <SkipForward size={20} color="#fff" style={{ cursor: 'pointer' }} />
-                    <Repeat size={18} color="#666" style={{ cursor: 'pointer' }} />
+                    <SkipForward
+                        size={20}
+                        color="#fff"
+                        style={{ cursor: 'pointer' }}
+                        onClick={playNext}
+                    />
+
+                    <div onClick={toggleRepeat} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        {repeatMode === 'one' ? (
+                            <Repeat1 size={18} color={themeColor} />
+                        ) : (
+                            <Repeat size={18} color={repeatMode === 'all' ? themeColor : "#666"} />
+                        )}
+                    </div>
                 </div>
 
                 {/* Progress Bar */}

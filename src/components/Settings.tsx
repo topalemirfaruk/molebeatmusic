@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import {
     Volume2,
-    Monitor,
     HardDrive,
     Info,
-    Moon,
-    Sun,
     Trash2,
     Github,
     Globe,
@@ -17,7 +14,6 @@ import { getDatabaseUsage } from '../utils/db';
 
 const Settings: React.FC = () => {
     const { volume, setVolume, tracks, favorites, playbackRate, setPlaybackRate, clearLibrary, themeColor, setThemeColor, equalizerBands, setEqualizerBand, setEqualizerPreset } = usePlayer();
-    const [isDarkMode, setIsDarkMode] = useState(true);
     const [storageUsed, setStorageUsed] = useState<string>('Calculating...');
 
     React.useEffect(() => {
@@ -40,13 +36,13 @@ const Settings: React.FC = () => {
     const SectionTitle = ({ title, icon: Icon }: { title: string, icon: any }) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', marginTop: '30px' }}>
             <Icon size={20} color="var(--accent-color)" />
-            <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#fff' }}>{title}</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>{title}</h2>
         </div>
     );
 
     const SettingItem = ({ children, style }: { children: React.ReactNode, style?: React.CSSProperties }) => (
         <div style={{
-            backgroundColor: '#252525',
+            backgroundColor: 'var(--bg-secondary)',
             borderRadius: '12px',
             padding: '20px',
             marginBottom: '10px',
@@ -61,19 +57,19 @@ const Settings: React.FC = () => {
 
     return (
         <div className="page-content" style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', height: 'calc(100vh - 90px)' }}>
-            <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '10px' }}>Settings</h1>
-            <p style={{ color: '#a0a0a0', marginBottom: '40px' }}>Manage your preferences and application data</p>
+            <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '10px', color: 'var(--text-primary)' }}>Settings</h1>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '40px' }}>Manage your preferences and application data</p>
 
             {/* Audio Settings */}
             <SectionTitle title="Audio" icon={Volume2} />
 
             <SettingItem>
                 <div>
-                    <div style={{ color: '#fff', fontSize: '15px', marginBottom: '4px' }}>Global Volume</div>
-                    <div style={{ color: '#a0a0a0', fontSize: '13px' }}>Adjust the master volume output</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: '15px', marginBottom: '4px' }}>Global Volume</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Adjust the master volume output</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px', width: '200px' }}>
-                    <Volume2 size={16} color="#a0a0a0" />
+                    <Volume2 size={16} color="var(--text-secondary)" />
                     <input
                         type="range"
                         min="0"
@@ -84,29 +80,29 @@ const Settings: React.FC = () => {
                         style={{
                             flex: 1,
                             height: '4px',
-                            background: '#383651',
+                            background: 'var(--bg-primary)',
                             borderRadius: '2px',
                             appearance: 'none',
                             outline: 'none',
                             cursor: 'pointer'
                         }}
                     />
-                    <span style={{ color: '#fff', fontSize: '13px', width: '30px', textAlign: 'right' }}>{Math.round(volume * 100)}%</span>
+                    <span style={{ color: 'var(--text-primary)', fontSize: '13px', width: '30px', textAlign: 'right' }}>{Math.round(volume * 100)}%</span>
                 </div>
             </SettingItem>
 
             <SettingItem>
                 <div>
-                    <div style={{ color: '#fff', fontSize: '15px', marginBottom: '4px' }}>Playback Speed</div>
-                    <div style={{ color: '#a0a0a0', fontSize: '13px' }}>Control the speed of audio playback</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: '15px', marginBottom: '4px' }}>Playback Speed</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Control the speed of audio playback</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <select
                         value={playbackRate}
                         onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
                         style={{
-                            backgroundColor: '#333',
-                            color: '#fff',
+                            backgroundColor: 'var(--bg-primary)',
+                            color: 'var(--text-primary)',
                             border: 'none',
                             padding: '8px 12px',
                             borderRadius: '8px',
@@ -126,9 +122,9 @@ const Settings: React.FC = () => {
 
             {/* Equalizer Settings */}
             <SectionTitle title="Equalizer" icon={Zap} />
-            <div style={{ backgroundColor: '#252525', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
+            <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <div style={{ color: '#fff', fontSize: '15px' }}>10-Band EQ</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: '15px' }}>10-Band EQ</div>
                     <select
                         onChange={(e) => {
                             const presets: { [key: string]: number[] } = {
@@ -145,8 +141,8 @@ const Settings: React.FC = () => {
                             }
                         }}
                         style={{
-                            backgroundColor: '#333',
-                            color: '#fff',
+                            backgroundColor: 'var(--bg-primary)',
+                            color: 'var(--text-primary)',
                             border: 'none',
                             padding: '6px 12px',
                             borderRadius: '6px',
@@ -182,7 +178,7 @@ const Settings: React.FC = () => {
                                     accentColor: 'var(--accent-color)'
                                 } as any}
                             />
-                            <div style={{ color: '#666', fontSize: '10px', marginTop: '10px' }}>
+                            <div style={{ color: 'var(--text-secondary)', fontSize: '10px', marginTop: '10px' }}>
                                 {[60, 170, 310, 600, '1k', '3k', '6k', '12k', '14k', '16k'][index]}
                             </div>
                         </div>
@@ -193,7 +189,7 @@ const Settings: React.FC = () => {
             {/* Theme Settings */}
             <SectionTitle title="Theme" icon={Palette} />
             <div style={{
-                backgroundColor: '#252525',
+                backgroundColor: 'var(--bg-secondary)',
                 padding: '20px',
                 borderRadius: '12px',
                 display: 'flex',
@@ -227,44 +223,6 @@ const Settings: React.FC = () => {
                     />
                 ))}
             </div>
-
-            {/* Appearance Settings */}
-            <SectionTitle title="Appearance" icon={Monitor} />
-
-            <SettingItem>
-                <div>
-                    <div style={{ color: '#fff', fontSize: '15px', marginBottom: '4px' }}>App Theme</div>
-                    <div style={{ color: '#a0a0a0', fontSize: '13px' }}>Switch between dark and light mode</div>
-                </div>
-                <div
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    style={{
-                        backgroundColor: '#333',
-                        padding: '4px',
-                        borderRadius: '20px',
-                        display: 'flex',
-                        gap: '4px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    <div style={{
-                        padding: '6px',
-                        borderRadius: '50%',
-                        backgroundColor: isDarkMode ? 'var(--accent-color)' : 'transparent',
-                        transition: 'all 0.2s'
-                    }}>
-                        <Moon size={14} color={isDarkMode ? '#fff' : '#666'} />
-                    </div>
-                    <div style={{
-                        padding: '6px',
-                        borderRadius: '50%',
-                        backgroundColor: !isDarkMode ? 'var(--accent-color)' : 'transparent',
-                        transition: 'all 0.2s'
-                    }}>
-                        <Sun size={14} color={!isDarkMode ? '#fff' : '#666'} />
-                    </div>
-                </div>
-            </SettingItem>
 
             {/* Storage Settings */}
             <SectionTitle title="Storage & Data" icon={HardDrive} />

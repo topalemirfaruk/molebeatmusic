@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { Mic } from 'lucide-react';
+import Visualizer from './Visualizer';
 
 const LyricsView: React.FC = () => {
     const { currentTrack, lyrics, currentLineIndex } = usePlayer();
@@ -99,6 +100,18 @@ const LyricsView: React.FC = () => {
                     )}
                     <div style={{ height: '50vh' }} />
                 </div>
+            </div>
+            <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                height: '300px',
+                zIndex: 2,
+                pointerEvents: 'none',
+                opacity: 0.6
+            }}>
+                <Visualizer />
             </div>
         </div>
     );

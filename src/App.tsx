@@ -9,13 +9,16 @@ import PlaylistDetail from './components/PlaylistDetail';
 import LyricsView from './components/LyricsView';
 import { PlayerProvider } from './context/PlayerContext';
 
+import Home from './components/Home';
+
 function App() {
   return (
     <PlayerProvider>
       <Router>
         <Layout>
           <Routes>
-            <Route path="/" element={<TrackList />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/tracks" element={<TrackList />} />
             <Route path="/albums" element={<Albums />} />
             <Route path="/playlists" element={<Playlists />} />
             <Route path="/playlists/:id" element={<PlaylistDetail />} />

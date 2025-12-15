@@ -1,14 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { Search, Heart, MoreVertical, Plus, ListPlus } from 'lucide-react';
+import { Search, Heart, MoreVertical, Plus, ListPlus, Edit2 } from 'lucide-react';
 import { usePlayer, type Track } from '../context/PlayerContext';
+import MetadataEditor from './MetadataEditor';
 
 interface TrackListProps {
     tracks?: Track[];
     hideAddButton?: boolean;
+    hideSearch?: boolean;
     onRemoveTrack?: (id: number) => void;
 }
 
-const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton, onRemoveTrack }) => {
+const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton, hideSearch, onRemoveTrack }) => {
     const {
         tracks: contextTracks,
         playTrack,
@@ -29,6 +31,7 @@ const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton
     const [editingTrackId, setEditingTrackId] = useState<number | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [showPlaylistSubmenu, setShowPlaylistSubmenu] = useState<number | null>(null);
+    const [metadataEditorTrack, setMetadataEditorTrack] = useState<Track | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,23 +71,25 @@ const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton
         <div className="page-content" style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', height: 'calc(100vh - 90px)' }} onClick={() => { setActiveMenuId(null); setShowPlaylistSubmenu(null); }}>
             {/* Header / Search Bar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#666', flex: 1 }}>
-                    <Search size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            fontSize: '16px',
-                            background: 'transparent',
-                            border: 'none',
-                            color: '#fff',
-                            outline: 'none',
-                            width: '100%'
-                        }}
-                    />
-                </div>
+                {!hideSearch && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#666', flex: 1 }}>
+                        <Search size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                fontSize: '16px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#fff',
+                                outline: 'none',
+                                width: '100%'
+                            }}
+                        />
+                    </div>
+                )}
 
                 {/* Add Music Button */}
                 {!hideAddButton && (
@@ -129,15 +134,20 @@ const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton
                         <div key={track.id} style={{
                             display: 'flex',
                             alignItems: 'center',
-                            padding: '10px',
+                            padding: '12px 16px',
                             borderRadius: '12px',
-                            backgroundColor: isCurrent ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            marginBottom: '8px',
+                            backgroundColor: isCurrent ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s',
+                            transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                            border: isCurrent ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent',
                             position: 'relative'
                         }}
                             onMouseEnter={(e) => {
-                                if (!isCurrent) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                                if (!isCurrent) {
+                                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                                    e.currentTarget.style.transform = 'scale(1.01)';
+                                }
                             }}
                             onMouseLeave={(e) => {
                                 if (!isCurrent) e.currentTarget.style.backgroundColor = 'transparent';
@@ -315,6 +325,28 @@ const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton
                                         <div
                                             onClick={(e) => {
                                                 e.stopPropagation();
+                                                setMetadataEditorTrack(track);
+                                                setActiveMenuId(null);
+                                            }}
+                                            style={{
+                                                padding: '8px 12px',
+                                                color: '#fff',
+                                                fontSize: '14px',
+                                                cursor: 'pointer',
+                                                borderRadius: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            <Edit2 size={14} />
+                                            Edit Metadata
+                                        </div>
+                                        <div
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 if (onRemoveTrack) {
                                                     onRemoveTrack(track.id);
                                                 } else {
@@ -344,6 +376,16 @@ const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton
                     );
                 })}
             </div>
+
+            {metadataEditorTrack && (
+                <MetadataEditor
+                    trackId={metadataEditorTrack.id}
+                    initialTitle={metadataEditorTrack.title}
+                    initialArtist={metadataEditorTrack.artist}
+                    initialImage={metadataEditorTrack.image}
+                    onClose={() => setMetadataEditorTrack(null)}
+                />
+            )}
         </div>
     );
 };

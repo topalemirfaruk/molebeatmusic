@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
+import React, { createContext, useState, useContext, useRef, useEffect, useCallback } from 'react';
 import {
     saveTrack,
     getAllTracks,
@@ -31,7 +31,11 @@ export interface Track {
     duration: string;
     image: string;
     audioUrl?: string;
+    playCount?: number;
+    lastPlayed?: number;
 }
+
+export type RepeatMode = 'off' | 'all' | 'one';
 
 interface PlayerContextType {
     tracks: Track[];
@@ -43,8 +47,14 @@ interface PlayerContextType {
     duration: number;
     favorites: number[];
     playlists: Playlist[];
+    isShuffling: boolean;
+    repeatMode: RepeatMode;
     playTrack: (track: Track) => void;
     togglePlay: () => void;
+    playNext: () => void;
+    playPrevious: () => void;
+    toggleShuffle: () => void;
+    toggleRepeat: () => void;
     toggleFavorite: (trackId: number) => void;
     seek: (time: number) => void;
     setVolume: (vol: number) => void;
@@ -54,6 +64,7 @@ interface PlayerContextType {
     addTracks: (files: File[]) => void;
     removeTrack: (id: number) => void;
     updateTrackTitle: (id: number, newTitle: string) => void;
+    updateTrackMetadata: (id: number, title: string, artist: string, imageBlob?: Blob) => Promise<void>;
     clearLibrary: () => void;
     createNewPlaylist: (name: string) => Promise<void>;
     removePlaylist: (id: string) => Promise<void>;
@@ -68,30 +79,21 @@ interface PlayerContextType {
     equalizerBands: number[];
     setEqualizerBand: (index: number, value: number) => void;
     setEqualizerPreset: (preset: number[]) => void;
+    analyserNode: AnalyserNode | null;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
-const initialTracks: Track[] = [
-    { id: 1, title: 'Qui sait ?', artist: 'Niro, ElGrandeToto', duration: '2:02', image: 'https://source.unsplash.com/random/50x50?sig=1' },
-    { id: 2, title: 'Adios', artist: 'Klass-A', duration: '4:17', image: 'https://source.unsplash.com/random/50x50?sig=2' },
-    { id: 3, title: 'POWER - A COLORS SHOW', artist: 'Shobee', duration: '3:23', image: 'https://source.unsplash.com/random/50x50?sig=3' },
-    { id: 4, title: 'EMO ERR', artist: 'Moro', duration: '2:02', image: 'https://source.unsplash.com/random/50x50?sig=4' },
-    { id: 5, title: 'Helma', artist: 'Tagne', duration: '2:30', image: 'https://source.unsplash.com/random/50x50?sig=5' },
-    { id: 6, title: 'Ojos Sin Ver', artist: 'Morad, ElGrandeToto', duration: '4:17', image: 'https://source.unsplash.com/random/50x50?sig=6' },
-    { id: 7, title: 'Let me love you ~ Krisx', artist: 'Krisx', duration: '4:17', image: 'https://source.unsplash.com/random/50x50?sig=7' },
-    { id: 8, title: 'M3a L3echrane', artist: 'Dizzy DROS', duration: '2:30', image: 'https://source.unsplash.com/random/50x50?sig=8' },
-    { id: 9, title: 'Hiphop is dead', artist: 'Fat Mizzo', duration: '3:23', image: 'https://source.unsplash.com/random/50x50?sig=9' },
-];
-
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [tracks, setTracks] = useState<Track[]>(initialTracks);
+    const [tracks, setTracks] = useState<Track[]>([]);
     const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolumeState] = useState(1);
     const [playbackRate, setPlaybackRateState] = useState(1.0);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [isShuffling, setIsShuffling] = useState(false);
+    const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
     const [favorites, setFavorites] = useState<number[]>(() => {
         const saved = localStorage.getItem('favorites');
         return saved ? JSON.parse(saved) : [];
@@ -111,18 +113,33 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const updateTime = () => setCurrentTime(audio.currentTime);
         const updateDuration = () => setDuration(audio.duration || 0);
-        const onEnded = () => setIsPlaying(false);
 
         audio.addEventListener('timeupdate', updateTime);
         audio.addEventListener('loadedmetadata', updateDuration);
-        audio.addEventListener('ended', onEnded);
 
         return () => {
             audio.removeEventListener('timeupdate', updateTime);
             audio.removeEventListener('loadedmetadata', updateDuration);
-            audio.removeEventListener('ended', onEnded);
         };
     }, []);
+
+    // Handle track ending (auto-play next)
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleEnded = () => {
+            if (repeatMode === 'one') {
+                audio.currentTime = 0;
+                audio.play();
+            } else {
+                playNext();
+            }
+        };
+
+        audio.addEventListener('ended', handleEnded);
+        return () => audio.removeEventListener('ended', handleEnded);
+    }, [currentTrack, tracks, isShuffling, repeatMode]); // Dependencies are crucial here
 
     // Fetch Lyrics when track changes
     useEffect(() => {
@@ -204,17 +221,89 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             return;
         }
 
+        // Update stats
+        const updatedTrack = {
+            ...track,
+            playCount: (track.playCount || 0) + 1,
+            lastPlayed: Date.now()
+        };
+
+        // Update local state
+        setTracks(prev => prev.map(t => t.id === track.id ? updatedTrack : t));
+
+        // Update DB
+        updateTrack(updatedTrack).catch(e => console.error("Failed to update track stats:", e));
+
         if (audioRef.current) {
             audioRef.current.src = track.audioUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
             audioRef.current.playbackRate = playbackRate;
             audioRef.current.volume = volume;
-            setCurrentTrack(track);
+            setCurrentTrack(updatedTrack);
             setIsPlaying(true);
         }
     };
 
     const togglePlay = () => {
         setIsPlaying(!isPlaying);
+    };
+
+    const playNext = useCallback(() => {
+        if (!currentTrack || tracks.length === 0) return;
+
+        let nextTrack: Track;
+
+        if (isShuffling) {
+            const randomIndex = Math.floor(Math.random() * tracks.length);
+            nextTrack = tracks[randomIndex];
+        } else {
+            const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+            const nextIndex = (currentIndex + 1) % tracks.length;
+
+            // If we reached the end and repeat is off, stop
+            if (currentIndex === tracks.length - 1 && repeatMode === 'off') {
+                setIsPlaying(false);
+                return;
+            }
+
+            nextTrack = tracks[nextIndex];
+        }
+
+        playTrack(nextTrack);
+    }, [currentTrack, tracks, isShuffling, repeatMode]);
+
+    const playPrevious = () => {
+        if (!currentTrack || tracks.length === 0) return;
+
+        // If playing for more than 3 seconds, restart track
+        if (currentTime > 3) {
+            seek(0);
+            return;
+        }
+
+        let prevTrack: Track;
+
+        if (isShuffling) {
+            const randomIndex = Math.floor(Math.random() * tracks.length);
+            prevTrack = tracks[randomIndex];
+        } else {
+            const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+            const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
+            prevTrack = tracks[prevIndex];
+        }
+
+        playTrack(prevTrack);
+    };
+
+    const toggleShuffle = () => {
+        setIsShuffling(!isShuffling);
+    };
+
+    const toggleRepeat = () => {
+        setRepeatMode(prev => {
+            if (prev === 'off') return 'all';
+            if (prev === 'all') return 'one';
+            return 'off';
+        });
     };
 
     const toggleFavorite = (trackId: number) => {
@@ -342,6 +431,38 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }));
     };
 
+    const updateTrackMetadata = async (id: number, title: string, artist: string, imageBlob?: Blob) => {
+        let imageUrl: string | undefined;
+        if (imageBlob) {
+            imageUrl = URL.createObjectURL(imageBlob);
+        }
+
+        setTracks(prev => prev.map(t => {
+            if (t.id === id) {
+                const updated = {
+                    ...t,
+                    title,
+                    artist,
+                    image: imageUrl || t.image
+                };
+                // Pass imageBlob to updateTrack if it exists
+                updateTrack(updated, imageBlob).catch(e => console.error("Failed to update track metadata:", e));
+                return updated;
+            }
+            return t;
+        }));
+
+        // If current track is being updated, update it as well
+        if (currentTrack?.id === id) {
+            setCurrentTrack(prev => prev ? {
+                ...prev,
+                title,
+                artist,
+                image: imageUrl || prev.image
+            } : null);
+        }
+    };
+
     const clearLibrary = async () => {
         setTracks([]);
         setFavorites([]);
@@ -413,6 +534,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const filtersRef = useRef<BiquadFilterNode[]>([]);
     const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
+    const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
     // Initialize Audio Context and Equalizer
     useEffect(() => {
@@ -441,13 +563,20 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
                 filtersRef.current = filters;
 
-                // Connect nodes: Source -> Filter1 -> Filter2 ... -> Destination
+                // Create Analyser
+                const analyser = audioContextRef.current.createAnalyser();
+                analyser.fftSize = 256;
+                setAnalyserNode(analyser);
+
+                // Connect nodes: Source -> Filter1 -> Filter2 ... -> Analyser -> Destination
                 let currentNode: AudioNode = sourceRef.current;
                 filters.forEach(filter => {
                     currentNode.connect(filter);
                     currentNode = filter;
                 });
-                currentNode.connect(audioContextRef.current.destination);
+
+                currentNode.connect(analyser);
+                analyser.connect(audioContextRef.current.destination);
             }
         };
 
@@ -499,8 +628,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             duration,
             favorites,
             playlists,
+            isShuffling,
+            repeatMode,
             playTrack,
             togglePlay,
+            playNext,
+            playPrevious,
+            toggleShuffle,
+            toggleRepeat,
             toggleFavorite,
             seek,
             setVolume,
@@ -511,6 +646,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             addTracks,
             removeTrack,
             updateTrackTitle,
+            updateTrackMetadata,
             clearLibrary,
             createNewPlaylist,
             removePlaylist,
@@ -524,12 +660,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setThemeColor,
             equalizerBands,
             setEqualizerBand,
-            setEqualizerPreset
+            setEqualizerPreset,
+            analyserNode
         }}>
             {children}
         </PlayerContext.Provider>
     );
 };
+
 
 export const usePlayer = () => {
     const context = useContext(PlayerContext);

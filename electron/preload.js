@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
     onYouTubeCode: (callback) => ipcRenderer.on('youtube-code', (_event, code) => callback(code)),

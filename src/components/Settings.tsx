@@ -307,7 +307,7 @@ const Settings: React.FC = () => {
                     <div>
                         <div style={{ color: 'var(--text-primary)', fontSize: '15px', marginBottom: '4px' }}>Check for Updates</div>
                         <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-                            {updateStatus || 'Current Version: 1.0.0'}
+                            {updateStatus || 'Current Version: 1.0.1'}
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -358,7 +358,7 @@ const Settings: React.FC = () => {
                     <Zap size={32} color="#fff" fill="currentColor" />
                 </div>
                 <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '5px' }}>MoleBeat Music</h3>
-                <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '20px' }}>Version 1.0.0 • Electron Build</p>
+                <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '20px' }}>Version 1.0.1 • Electron Build</p>
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
                     <a href="#" style={{ color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#333', padding: '8px 16px', borderRadius: '20px', fontSize: '13px' }}>

@@ -39,6 +39,19 @@
       ],
       "category": "Audio",
       "icon": "icon.png"
+    },
+    "flatpak": {
+      "finishArgs": [
+        "--share=ipc",
+        "--socket=x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--device=dri",
+        "--share=network",
+        "--filesystem=host",
+        "--socket=system-bus",
+        "--socket=session-bus"
+      ]
     }
   },
   "dependencies": {

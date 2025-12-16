@@ -36,7 +36,8 @@
       "target": [
         "AppImage"
       ],
-      "category": "Audio"
+      "category": "Audio",
+      "icon": "icon.png"
     }
   },
   "dependencies": {

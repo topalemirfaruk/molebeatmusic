@@ -34,7 +34,8 @@
     ],
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "flatpak"
       ],
       "category": "Audio",
       "icon": "icon.png"

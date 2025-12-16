@@ -19,7 +19,7 @@ interface MoleBeatDB extends DBSchema {
     };
 }
 
-const DB_NAME = 'molebeat-db';
+const DB_NAME = 'molebeat-db-v1';
 const STORE_NAME = 'tracks';
 const PLAYLIST_STORE_NAME = 'playlists';
 

@@ -15,36 +15,6 @@ import { getDatabaseUsage } from '../utils/db';
 const Settings: React.FC = () => {
     const { volume, setVolume, tracks, favorites, playbackRate, setPlaybackRate, clearLibrary, themeColor, setThemeColor, equalizerBands, setEqualizerBand, setEqualizerPreset } = usePlayer();
     const [storageUsed, setStorageUsed] = useState<string>('Calculating...');
-    const [updateStatus, setUpdateStatus] = useState<string>('');
-    const [isUpdateAvailable, setIsUpdateAvailable] = useState<boolean>(false);
-    const [isUpdateDownloaded, setIsUpdateDownloaded] = useState<boolean>(false);
-
-    React.useEffect(() => {
-        if (window.electronAPI) {
-            window.electronAPI.onUpdateStatus((status: string) => {
-                setUpdateStatus(status);
-            });
-            window.electronAPI.onUpdateAvailable(() => {
-                setIsUpdateAvailable(true);
-            });
-            window.electronAPI.onUpdateDownloaded(() => {
-                setIsUpdateDownloaded(true);
-                setIsUpdateAvailable(false);
-            });
-        }
-    }, []);
-
-    const checkForUpdates = () => {
-        if (window.electronAPI) {
-            window.electronAPI.checkForUpdates();
-        }
-    };
-
-    const quitAndInstall = () => {
-        if (window.electronAPI) {
-            window.electronAPI.quitAndInstall();
-        }
-    };
 
     React.useEffect(() => {
         getDatabaseUsage().then((bytes: number) => {
@@ -300,55 +270,7 @@ const Settings: React.FC = () => {
 
 
 
-            {/* Update Settings */}
-            <SectionTitle title="Updates" icon={Zap} />
-            <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <div style={{ color: 'var(--text-primary)', fontSize: '15px', marginBottom: '4px' }}>Check for Updates</div>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-                            {updateStatus || 'Current Version: 1.0.1'}
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        {isUpdateDownloaded ? (
-                            <button
-                                onClick={quitAndInstall}
-                                style={{
-                                    backgroundColor: 'var(--accent-color)',
-                                    color: '#fff',
-                                    border: 'none',
-                                    padding: '8px 16px',
-                                    borderRadius: '8px',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Restart & Install
-                            </button>
-                        ) : (
-                            <button
-                                onClick={checkForUpdates}
-                                disabled={isUpdateAvailable}
-                                style={{
-                                    backgroundColor: isUpdateAvailable ? 'var(--bg-primary)' : 'var(--accent-color)',
-                                    color: isUpdateAvailable ? 'var(--text-secondary)' : '#fff',
-                                    border: 'none',
-                                    padding: '8px 16px',
-                                    borderRadius: '8px',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    cursor: isUpdateAvailable ? 'default' : 'pointer',
-                                    opacity: isUpdateAvailable ? 0.7 : 1
-                                }}
-                            >
-                                {isUpdateAvailable ? 'Downloading...' : 'Check Now'}
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
+
 
             {/* About Section */}
             <SectionTitle title="About" icon={Info} />

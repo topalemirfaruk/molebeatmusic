@@ -41,7 +41,6 @@
   },
   "dependencies": {
     "@types/jsmediatags": "^3.9.6",
-    "electron-updater": "^6.6.2",
     "idb": "^8.0.3",
     "jsmediatags": "^3.9.7",
     "lucide-react": "^0.561.0",

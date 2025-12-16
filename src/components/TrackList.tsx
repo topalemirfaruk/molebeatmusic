@@ -141,7 +141,8 @@ const TrackList: React.FC<TrackListProps> = ({ tracks: propTracks, hideAddButton
                             cursor: 'pointer',
                             transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                             border: isCurrent ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent',
-                            position: 'relative'
+                            position: 'relative',
+                            zIndex: activeMenuId === track.id ? 100 : 1
                         }}
                             onMouseEnter={(e) => {
                                 if (!isCurrent) {

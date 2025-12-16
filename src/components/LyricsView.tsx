@@ -71,34 +71,37 @@ const LyricsView: React.FC = () => {
                     }}
                     className="hide-scrollbar"
                 >
-                    <div style={{ height: '50vh' }} />
                     {lyrics.length > 0 ? (
-                        lyrics.map((line, index) => (
-                            <p
-                                key={index}
-                                style={{
-                                    fontSize: currentLineIndex === index ? '28px' : '20px',
-                                    fontWeight: currentLineIndex === index ? 700 : 500,
-                                    color: currentLineIndex === index ? '#fff' : 'rgba(255, 255, 255, 0.4)',
-                                    marginBottom: '24px',
-                                    transition: 'all 0.3s ease',
-                                    transform: currentLineIndex === index ? 'scale(1.05)' : 'scale(1)',
-                                    transformOrigin: 'left center',
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => {
-                                    // Optional: Seek to this line
-                                }}
-                            >
-                                {line.text}
-                            </p>
-                        ))
+                        <>
+                            <div style={{ height: '50vh' }} />
+                            {lyrics.map((line, index) => (
+                                <p
+                                    key={index}
+                                    style={{
+                                        fontSize: currentLineIndex === index ? '28px' : '20px',
+                                        fontWeight: currentLineIndex === index ? 700 : 500,
+                                        color: currentLineIndex === index ? '#fff' : 'rgba(255, 255, 255, 0.4)',
+                                        marginBottom: '24px',
+                                        transition: 'all 0.3s ease',
+                                        transform: currentLineIndex === index ? 'scale(1.05)' : 'scale(1)',
+                                        transformOrigin: 'left center',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => {
+                                        // Optional: Seek to this line
+                                    }}
+                                >
+                                    {line.text}
+                                </p>
+                            ))}
+                            <div style={{ height: '50vh' }} />
+                        </>
                     ) : (
-                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '18px' }}>
-                            No lyrics found for this track
+                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: 'rgba(255,255,255,0.5)', fontSize: '18px' }}>
+                            <Mic size={48} style={{ marginBottom: '20px', opacity: 0.5 }} />
+                            <p>No lyrics found for this track</p>
                         </div>
                     )}
-                    <div style={{ height: '50vh' }} />
                 </div>
             </div>
             <div style={{
